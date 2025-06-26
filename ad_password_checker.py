@@ -62,12 +62,12 @@ class ADConfig:
     def __init__(self, config_file: str = "ad_config.json"):
         self.config_file = Path(config_file)
         self.default_config = {
-            "server": "",
+            "server": "server1.contoso.com",
             "port": 636,
             "use_ssl": True,
-            "domain": "",
-            "base_dn": "",
-            "username": "",
+            "domain": "contoso",
+            "base_dn": "ou=test,dc=contoso,dc=com",
+            "username": "user1",
             "auto_refresh": False,
             "refresh_interval": 60,
             "warning_days": 14
