@@ -10,7 +10,8 @@ from PyQt5.QtWidgets import (
     QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
     QLabel, QLineEdit, QPushButton, QTableWidget, QTableWidgetItem,
     QGroupBox, QFormLayout, QCheckBox, QSpinBox, QTextEdit,
-    QMessageBox, QProgressBar, QStatusBar, QSplitter, QHeaderView
+    QMessageBox, QProgressBar, QStatusBar, QSplitter, QHeaderView,
+    QDialog, QScrollArea, QFrame
 )
 from PyQt5.QtCore import QThread, pyqtSignal, QTimer, Qt
 from PyQt5.QtGui import QFont, QIcon
@@ -467,6 +468,178 @@ class PasswordExpiryTable(QTableWidget):
             self.setItem(row, 6, QTableWidgetItem(status))
 
 
+class ConfigurationHelpDialog(QDialog):
+    """Dialog showing configuration help and examples."""
+    
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setWindowTitle("Configuration Help")
+        self.setModal(True)
+        self.resize(800, 600)
+        self.setup_ui()
+    
+    def setup_ui(self):
+        """Setup the help dialog UI."""
+        layout = QVBoxLayout()
+        
+        # Title
+        title = QLabel("Active Directory Configuration Guide")
+        title.setFont(QFont("Arial", 14, QFont.Bold))
+        title.setAlignment(Qt.AlignCenter)
+        layout.addWidget(title)
+        
+        # Scroll area for content
+        scroll = QScrollArea()
+        scroll_widget = QWidget()
+        scroll_layout = QVBoxLayout()
+        
+        # Required Settings Section
+        required_group = QGroupBox("Required Settings")
+        required_layout = QVBoxLayout()
+        
+        required_text = QLabel("""Fill in the configuration panel with your Active Directory details:""")
+        required_text.setWordWrap(True)
+        required_layout.addWidget(required_text)
+        
+        # Configuration table
+        config_examples = [
+            ("Server", "dc01.company.com", "Your AD domain controller FQDN or IP"),
+            ("Port", "636 (SSL) or 389", "LDAP port (636 recommended for security)"),
+            ("Use SSL/TLS", "✅ Checked", "Enable secure connection (recommended)"),
+            ("Domain", "COMPANY", "Your Windows domain name (short format)"),
+            ("Base DN", "DC=company,DC=com", "LDAP search base for users"),
+            ("Username", "serviceaccount", "AD account with read permissions"),
+            ("Password", "your_password", "Account password (not saved)")
+        ]
+        
+        for field, example, description in config_examples:
+            example_frame = QFrame()
+            example_frame.setFrameStyle(QFrame.Box)
+            example_layout = QVBoxLayout()
+            
+            field_label = QLabel(f"<b>{field}:</b>")
+            example_label = QLabel(f"Example: <code>{example}</code>")
+            desc_label = QLabel(description)
+            desc_label.setWordWrap(True)
+            desc_label.setStyleSheet("color: #666; font-style: italic;")
+            
+            example_layout.addWidget(field_label)
+            example_layout.addWidget(example_label)
+            example_layout.addWidget(desc_label)
+            example_frame.setLayout(example_layout)
+            
+            required_layout.addWidget(example_frame)
+        
+        required_group.setLayout(required_layout)
+        scroll_layout.addWidget(required_group)
+        
+        # Common Scenarios Section
+        scenarios_group = QGroupBox("Common Configuration Scenarios")
+        scenarios_layout = QVBoxLayout()
+        
+        scenario1 = QLabel("""
+<b>Scenario 1: Standard Corporate Domain</b><br>
+• Server: <code>dc01.company.local</code><br>
+• Port: <code>636</code><br>
+• Domain: <code>COMPANY</code><br>
+• Base DN: <code>DC=company,DC=local</code><br>
+• Username: <code>svc-ldap</code> (service account)
+        """)
+        scenario1.setWordWrap(True)
+        scenarios_layout.addWidget(scenario1)
+        
+        scenario2 = QLabel("""
+<b>Scenario 2: Cloud/Hybrid Environment</b><br>
+• Server: <code>dc.company.com</code><br>
+• Port: <code>636</code><br>
+• Domain: <code>company.com</code><br>
+• Base DN: <code>DC=company,DC=com</code><br>
+• Username: <code>admin@company.com</code>
+        """)
+        scenario2.setWordWrap(True)
+        scenarios_layout.addWidget(scenario2)
+        
+        scenario3 = QLabel("""
+<b>Scenario 3: Development/Testing</b><br>
+• Server: <code>192.168.1.10</code> (IP address)<br>
+• Port: <code>389</code> (non-SSL for testing)<br>
+• Domain: <code>TESTDOMAIN</code><br>
+• Base DN: <code>DC=testdomain,DC=local</code><br>
+• Username: <code>testuser</code>
+        """)
+        scenario3.setWordWrap(True)
+        scenarios_layout.addWidget(scenario3)
+        
+        scenarios_group.setLayout(scenarios_layout)
+        scroll_layout.addWidget(scenarios_group)
+        
+        # Troubleshooting Section
+        troubleshoot_group = QGroupBox("Quick Troubleshooting")
+        troubleshoot_layout = QVBoxLayout()
+        
+        troubleshoot_text = QLabel("""
+<b>Connection Issues:</b><br>
+• Use "Test Connection" button to verify settings<br>
+• Try both server name and IP address<br>
+• Check if port 636/389 is accessible<br>
+• Verify service account is not locked<br><br>
+
+<b>No Results:</b><br>
+• Verify Base DN matches your domain structure<br>
+• Check service account has read permissions<br>
+• Ensure users exist in the specified organizational unit<br><br>
+
+<b>Authentication Errors:</b><br>
+• Try short domain name (COMPANY) vs FQDN (company.com)<br>
+• Verify username format (with or without domain prefix)<br>
+• Check account password and expiration
+        """)
+        troubleshoot_text.setWordWrap(True)
+        troubleshoot_layout.addWidget(troubleshoot_text)
+        
+        troubleshoot_group.setLayout(troubleshoot_layout)
+        scroll_layout.addWidget(troubleshoot_group)
+        
+        # Security Notes Section
+        security_group = QGroupBox("Security Recommendations")
+        security_layout = QVBoxLayout()
+        
+        security_text = QLabel("""
+<b>Best Practices:</b><br>
+• Always use SSL/TLS (port 636) in production<br>
+• Create dedicated service account with minimal permissions<br>
+• Use strong passwords for service accounts<br>
+• Monitor LDAP access logs regularly<br>
+• Test configuration in development environment first<br><br>
+
+<b>Required Permissions:</b><br>
+• Read access to user objects in Active Directory<br>
+• Permission to query: sAMAccountName, displayName, mail, pwdLastSet, userAccountControl<br>
+• No administrator privileges required
+        """)
+        security_text.setWordWrap(True)
+        security_layout.addWidget(security_text)
+        
+        security_group.setLayout(security_layout)
+        scroll_layout.addWidget(security_group)
+        
+        # Set scroll widget
+        scroll_widget.setLayout(scroll_layout)
+        scroll.setWidget(scroll_widget)
+        scroll.setWidgetResizable(True)
+        layout.addWidget(scroll)
+        
+        # Close button
+        close_button = QPushButton("Close")
+        close_button.clicked.connect(self.accept)
+        button_layout = QHBoxLayout()
+        button_layout.addStretch()
+        button_layout.addWidget(close_button)
+        layout.addLayout(button_layout)
+        
+        self.setLayout(layout)
+
+
 class ConfigurationWidget(QWidget):
     """Widget for AD connection configuration."""
     
@@ -533,9 +706,11 @@ class ConfigurationWidget(QWidget):
         button_layout = QHBoxLayout()
         self.save_button = QPushButton("Save Configuration")
         self.test_button = QPushButton("Test Connection")
+        self.help_button = QPushButton("Configuration Help")
         
         button_layout.addWidget(self.save_button)
         button_layout.addWidget(self.test_button)
+        button_layout.addWidget(self.help_button)
         button_layout.addStretch()
         
         # Main layout
@@ -549,6 +724,7 @@ class ConfigurationWidget(QWidget):
         # Connect signals
         self.save_button.clicked.connect(self.save_configuration)
         self.test_button.clicked.connect(self.test_connection)
+        self.help_button.clicked.connect(self.show_configuration_help)
     
     def load_config_values(self):
         """Load configuration values into UI controls."""
@@ -623,6 +799,11 @@ class ConfigurationWidget(QWidget):
         self.test_button.setEnabled(True)
         self.test_button.setText("Test Connection")
     
+    def show_configuration_help(self):
+        """Show configuration help dialog with examples."""
+        help_dialog = ConfigurationHelpDialog(self)
+        help_dialog.exec_()
+    
     def get_connection_params(self) -> Dict[str, Any]:
         """Get current connection parameters."""
         return {
@@ -667,10 +848,12 @@ class ADPasswordExpiryApp(QMainWindow):
         
         self.refresh_button = QPushButton("Refresh Data")
         self.config_button = QPushButton("Configuration")
+        self.help_button = QPushButton("Help")
         self.export_button = QPushButton("Export Data")
         
         toolbar_layout.addWidget(self.refresh_button)
         toolbar_layout.addWidget(self.config_button)
+        toolbar_layout.addWidget(self.help_button)
         toolbar_layout.addWidget(self.export_button)
         toolbar_layout.addStretch()
         
@@ -717,6 +900,7 @@ class ADPasswordExpiryApp(QMainWindow):
         """Setup signal connections."""
         self.refresh_button.clicked.connect(self.refresh_data)
         self.config_button.clicked.connect(self.show_configuration)
+        self.help_button.clicked.connect(self.show_help)
         self.export_button.clicked.connect(self.export_data)
         self.refresh_timer.timeout.connect(self.refresh_data)
     
@@ -725,6 +909,11 @@ class ADPasswordExpiryApp(QMainWindow):
         if self.config.config.get("auto_refresh", False):
             interval = self.config.config.get("refresh_interval", 60) * 1000
             self.refresh_timer.start(interval)
+    
+    def show_help(self):
+        """Show configuration help dialog."""
+        help_dialog = ConfigurationHelpDialog(self)
+        help_dialog.exec_()
     
     def show_configuration(self):
         """Show/hide configuration panel."""
