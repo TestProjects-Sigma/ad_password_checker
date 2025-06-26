@@ -1,0 +1,11 @@
+{
+  "server": "server1.contoso.com",
+  "port": 636,
+  "use_ssl": true,
+  "domain": "contoso",
+  "base_dn": "ou=test,dc=contoso,dc=com",
+  "username": "user1",
+  "auto_refresh": false,
+  "refresh_interval": 60,
+  "warning_days": 15
+}
